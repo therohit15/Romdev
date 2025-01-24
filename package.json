@@ -1,0 +1,21 @@
+{
+  "name": "romdev",
+  "version": "1.0.0",
+  "description": "Developers can find their match",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "expressjs",
+    "nodemon"
+  ],
+  "author": "rohit",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
