@@ -1,8 +1,18 @@
 const express = require("express");
 const res = require("express/lib/response");
+const connectDB = require("./config/database.js");
 const app = express();
 const port = 3000;
-const {adminAuth,userAuth} = require("./middlewares/auth.js");
+connectDB().then(()=>{
+    console.log("Database connection established...");
+    app.listen(port,()=>{
+        console.log("Server is successfully listening on port 3000");
+    })
+}).catch((err)=>{
+    console.log("Database cannot be connected");
+});
+/*const {adminAuth,userAuth} = require("./middlewares/auth.js");
+const { connection } = require("mongoose");
 app.use("/admin",adminAuth);
 app.get("/admin/getAllData",(req,res)=>{
     try {
@@ -26,7 +36,4 @@ app.use("/",(err,req,res,next)=>{
     if(err){
         res.status(500).send("Request failed");
     }
-})
-app.listen(port,()=>{
-    console.log("Server is successfully listening on port 3000");
-})
+})*/
