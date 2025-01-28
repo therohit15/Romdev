@@ -1,8 +1,25 @@
 const express = require("express");
 const res = require("express/lib/response");
 const connectDB = require("./config/database.js");
+const User = require("./models/user.js");
 const app = express();
 const port = 3000;
+app.post("/signup",(req,res)=>{
+    const user = new User({
+        firstName: "Rohit",
+        lastName:"K",
+        email:"rohitk@gmail.com",
+        password:"rohit123",
+        age:20,
+        gender:"Male"
+    });
+    try {
+        user.save();
+        res.send("User added successfully");
+    } catch (error) {
+        res.send("Error occured");
+    }
+})
 connectDB().then(()=>{
     console.log("Database connection established...");
     app.listen(port,()=>{
