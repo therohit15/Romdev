@@ -30,7 +30,7 @@ app.get("/feed",async (req,res)=>{
     const users = await User.find({});
     try{
         if(users.length===0){
-            res.status(404).send("Email not found");
+            res.status(404).send("No users found");
         }else{
             res.send(users);
         }
@@ -38,6 +38,29 @@ app.get("/feed",async (req,res)=>{
         res.status(400).send("Error occured");
     }
 })
+app.delete("/user", async(req,res)=>{
+    const userId = req.body.userId;
+    try {
+        const user = await User.findByIdAndDelete(userId);            
+        res.send("User deleted successfully");
+    } catch (error) {
+        res.status(400).send("Error occured");
+    }
+});
+app.patch("/user", async(req,res)=>{
+    const email = req.body.email;
+    const data = req.body
+    try {
+        const user = await User.findOneAndUpdate({email:email},data,{new:true}); 
+        console.log(user);
+                   
+        res.send("User updated successfully");
+    } catch (error) {
+        console.log(error);
+        
+        res.status(400).send("Error occured");
+    }
+});
 connectDB().then(()=>{
     console.log("Database connection established...");
     app.listen(port,()=>{
