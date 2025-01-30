@@ -10,7 +10,7 @@ app.post("/signup",(req,res)=>{
     try {
         user.save();
         res.send("User added successfully");
-    } catch (error) {
+    } catch (err) {
         res.send("Error occured");
     }
 });
@@ -51,9 +51,10 @@ app.patch("/user", async(req,res)=>{
     const email = req.body.email;
     const data = req.body
     try {
-        const user = await User.findOneAndUpdate({email:email},data,{new:true}); 
-        console.log(user);
-                   
+        const user = await User.findOneAndUpdate({email:email},data,{
+            new:true,
+            runValidators:true
+        });        
         res.send("User updated successfully");
     } catch (error) {
         console.log(error);
