@@ -11,7 +11,7 @@ app.post("/signup",(req,res)=>{
         user.save();
         res.send("User added successfully");
     } catch (err) {
-        res.send("Error occured");
+        res.send("Error occured"+err);
     }
 });
 app.get("/user",async (req,res)=>{
@@ -47,19 +47,28 @@ app.delete("/user", async(req,res)=>{
         res.status(400).send("Error occured");
     }
 });
-app.patch("/user", async(req,res)=>{
-    const email = req.body.email;
-    const data = req.body
+app.patch("/user/:userId", async(req,res)=>{ 
+    const userId = req.params?.userId;
+    const data = req.body;
     try {
-        const user = await User.findOneAndUpdate({email:email},data,{
+        const ALLOWED_UPDATES = ["password","age","photoUrl","gender","skills"];
+        const isUpdateAllowed = Object.keys(data).every((k)=>
+            ALLOWED_UPDATES.includes(k)
+        );
+        if(!isUpdateAllowed){
+            throw new Error("Update not allowed");
+        }
+        if(req.body.skills.length>=10){
+            throw new Error("Skills can't be more than 10")
+        }
+        const user = await User.findByIdAndUpdate({_id:userId},data,{
             new:true,
             runValidators:true
         });        
         res.send("User updated successfully");
     } catch (error) {
         console.log(error);
-        
-        res.status(400).send("Error occured");
+        res.status(400).send(error.message);
     }
 });
 connectDB().then(()=>{
