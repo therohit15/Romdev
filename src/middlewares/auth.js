@@ -1,27 +1,24 @@
-const express = require("express");
-const res = require("express/lib/response");
-const app = express();
-const adminAuth = (req,res,next)=>{
-    console.log("Admin auth is getting checked");
-    const token = "rohit";
-    const isAdminAuthorized = token==="rohit";
-    if(!isAdminAuthorized){
-        res.status(201).send("Authentication Failed");
-    }else{
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const userAuth = async (req,res,next)=>{
+    try{
+        const {token} = req.cookies;
+        if(!token){
+            throw new Error("Token is invalid!!!");
+        }
+        const decodedObj = jwt.verify(token,"password");
+        const {_id} = decodedObj;
+        const user =await User.findById(_id);
+        if(!user){
+            throw new Error("User not found");
+        }
+        req.user = user;
         next();
+    }catch(err){
+        res.status(404).send("Error: "+err.message);
     }
-}
-const userAuth = (req,res,next)=>{
-    console.log("User auth is getting checked");
-    const token = "rohit";
-    const isUserAuthorized = token==="rohit";
-    if(!isUserAuthorized){
-        res.status(201).send("Authentication Failed");
-    }else{
-        next();
-    }
+
 }
 module.exports = {
-    adminAuth,
     userAuth
 }

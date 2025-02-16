@@ -4,8 +4,10 @@ const res = require("express/lib/response");
 const connectDB = require("./config/database.js");
 const validator = require("validator");
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const User = require("./models/user.js");
 const {validateSignUpData} = require("./utils/validation.js")
+const {userAuth} = require("./middlewares/auth.js");
 const app = express();
 const port = 3000;
 app.use(express.json());
@@ -37,9 +39,10 @@ app.post("/login", async (req,res)=>{
         if(!user){
             throw new Error("Invalid Credentials");
         }
-        const isPasswordValid = await bcrypt.compare(password,user.password);
+        const isPasswordValid = await user.validatePassword(password);
         if(isPasswordValid){
-            res.cookie("token","980c7uvx809hweihw3jebfdskj");
+            const token = await user.getJWT();
+            res.cookie("token",token);
             res.send("Login successful");
         }else{
             throw new Error("Invalid Credentials")
@@ -48,68 +51,16 @@ app.post("/login", async (req,res)=>{
         res.status(400).send("ERROR : "+err);
 }
 });
-app.get("/user",async (req,res)=>{
-    const userEmail = await User.find({email:req.body.email});
+app.get("/profile", userAuth, async(req,res)=>{
     try{
-        if(userEmail.length===0){
-            res.status(404).send("Email not found");
-        }else{
-            res.send(userEmail);
-        }
-    }catch(err){
-        res.status(400).send("Error occured");
+        const user = req.user;
+        res.send(user);
+    }
+    catch(err){
+        res.status(400).send("ERROR : "+err.message);
     }
 });
-app.get("/feed",async (req,res)=>{
-    const users = await User.find({});
-    try{
-        if(users.length===0){
-            res.status(404).send("No users found");
-        }else{
-            res.send(users);
-        }
-    }catch(err){
-        res.status(400).send("Error occured");
-    }
-});
-app.get("/profile", async(req,res)=>{
-    const cookies = req.cookies;
-    console.log(cookies);
-    res.send("Reading Cookie");
-});
-app.delete("/user", async(req,res)=>{
-    const userId = req.body.userId;
-    try {
-        const user = await User.findByIdAndDelete(userId);            
-        res.send("User deleted successfully");
-    } catch (error) {
-        res.status(400).send("Error occured");
-    }
-});
-app.patch("/user/:userId", async(req,res)=>{ 
-    const userId = req.params?.userId;
-    const data = req.body;
-    try {
-        const ALLOWED_UPDATES = ["password","age","photoUrl","gender","skills"];
-        const isUpdateAllowed = Object.keys(data).every((k)=>
-            ALLOWED_UPDATES.includes(k)
-        );
-        if(!isUpdateAllowed){
-            throw new Error("Update not allowed");
-        }
-        if(req.body.skills.length>=10){
-            throw new Error("Skills can't be more than 10")
-        }
-        const user = await User.findByIdAndUpdate({_id:userId},data,{
-            new:true,
-            runValidators:true
-        });        
-        res.send("User updated successfully");
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message);
-    }
-});
+
 connectDB().then(()=>{
     console.log("Database connection established...");
     app.listen(port,()=>{
