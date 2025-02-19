@@ -1,65 +1,19 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
 const res = require("express/lib/response");
 const connectDB = require("./config/database.js");
-const validator = require("validator");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
-const User = require("./models/user.js");
-const {validateSignUpData} = require("./utils/validation.js")
-const {userAuth} = require("./middlewares/auth.js");
 const app = express();
 const port = 3000;
 app.use(express.json());
 app.use(cookieParser());
-app.post("/signup",async (req,res)=>{
-    try {
-        validateSignUpData(req);
-        const {firstName, lastName, email, password} = req.body;
-        const passwordHash = await bcrypt.hash(password,10);
-        const user = new User({
-            firstName,
-            lastName,
-            email,
-            password:passwordHash
-        });
-        user.save();
-        res.send("User added successfully");
-    } catch (err) {
-        res.status(400).send("ERROR : "+err);
-    }
-});
-app.post("/login", async (req,res)=>{
-    try{
-        const {email,password}= req.body;
-        const user = await User.findOne({email:email});
-        if(!validator.isEmail(email)){
-            throw new Error("Invalid email");
-        }
-        if(!user){
-            throw new Error("Invalid Credentials");
-        }
-        const isPasswordValid = await user.validatePassword(password);
-        if(isPasswordValid){
-            const token = await user.getJWT();
-            res.cookie("token",token);
-            res.send("Login successful");
-        }else{
-            throw new Error("Invalid Credentials")
-        }
-    } catch (err) {
-        res.status(400).send("ERROR : "+err);
-}
-});
-app.get("/profile", userAuth, async(req,res)=>{
-    try{
-        const user = req.user;
-        res.send(user);
-    }
-    catch(err){
-        res.status(400).send("ERROR : "+err.message);
-    }
-});
+
+const {authRouter} = require("./routes/auth.js");
+const {profileRouter} = require("./routes/profile.js");
+const {requestRouter} = require("./routes/request.js");
+
+app.use("/",authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
 
 connectDB().then(()=>{
     console.log("Database connection established...");
