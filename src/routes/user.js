@@ -1,8 +1,9 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const { ConnectionRequest } = require("../models/connectionRequest");
+const User = require("../models/user");
 const userRouter = express.Router();
-const USER_SAFE_DATA = ["FirstName" ,"lastName", "photoUrl", "age", "gender", "skills"];
+const USER_SAFE_DATA = ["firstName" ,"lastName", "photoUrl", "bio", "skills"];
 userRouter.get("/user/request/recieved", userAuth, async (req,res)=>{
     try {
         const loggedInUser = req.user;
@@ -39,5 +40,35 @@ userRouter.get("/user/connections", userAuth, async(req,res)=>{
             message:err.message,
         })
     }
-})
+});
+userRouter.get("/user/feed", userAuth, async(req,res)=>{
+    try {
+        const loggedInUser = req.user;
+        const page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10;
+        const skip = (page-1)*limit;
+        limit = limit>50 ? 50 :limit;
+        const connectionRequest = await ConnectionRequest.find({
+            $or:[{fromUserId: loggedInUser._id},{toUserId: loggedInUser._id}],
+        }).select(["fromUserId","toUserId"]);
+        const hideUsersFromFeed = new Set();
+        connectionRequest.forEach((req)=>{
+            hideUsersFromFeed.add(req.fromUserId.toString());
+            hideUsersFromFeed.add(req.toUserId.toString());
+        });
+        const user = await User.find({
+            $and:[
+                {_id: {$nin: Array.from(hideUsersFromFeed)}},
+                {_id: {$ne: loggedInUser._id}},
+            ],
+        }).select(USER_SAFE_DATA)
+        .skip(skip)
+        .limit(limit);
+        res.send(user);     
+    } catch (err) {
+        res.status(400).json({
+            message: err.message,
+        });
+    }
+});
 module.exports = {userRouter};
