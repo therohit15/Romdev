@@ -1,9 +1,7 @@
-import Navbar from "./components/Navbar";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router";
-import Body from "./pages/Body";
-import Login from "./pages/Login";
-import Profile from "./pages/Profile";
+import Body from "./Body";
+import Login from "./Login";
+import Profile from "./Profile";
+import { BrowserRouter, Route, Routes } from "react-router";
 
 function App() {
   return (
