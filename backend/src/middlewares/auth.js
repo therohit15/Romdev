@@ -10,12 +10,12 @@ const userAuth = async (req, res, next) => {
     const { _id } = decodedObj;
     const user = await User.findById(_id);
     if (!user) {
-      throw new Error("User not found");
+      return res.status(401).send("Unauthorized: User not found.");
     }
     req.user = user;
     next();
   } catch (err) {
-    res.status(404).send("Error: " + err.message);
+    return res.status(403).send("Forbidden: " + err.message);
   }
 };
 module.exports = {
